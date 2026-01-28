@@ -37,6 +37,9 @@ services:
       HOME: /home/node
       TERM: xterm-256color
 
+      # Traefik proxy support (Coolify uses Traefik)
+      CLAWDBOT_TRUSTED_PROXIES: "172.16.0.0/12,10.0.0.0/8"
+
       # Gateway authentication (CHANGE THIS - generate a secure random token)
       CLAWDBOT_GATEWAY_TOKEN: ${GATEWAY_TOKEN:?Set GATEWAY_TOKEN in Coolify}
 
