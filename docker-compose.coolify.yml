@@ -74,9 +74,9 @@ services:
       - /bin/sh
       - -c
       - |
-        # Fix volume permissions
-        mkdir -p /home/node/.moltbot /home/node/clawd
-        chown -R node:node /home/node/.moltbot /home/node/clawd
+        # Fix volume permissions (both new .moltbot and legacy .clawdbot paths)
+        mkdir -p /home/node/.moltbot /home/node/.clawdbot /home/node/clawd
+        chown -R node:node /home/node/.moltbot /home/node/.clawdbot /home/node/clawd
 
         # Create config with trusted proxies if it doesn't exist
         CONFIG_FILE="/home/node/.moltbot/moltbot.json"
