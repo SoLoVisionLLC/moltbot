@@ -37,9 +37,6 @@ services:
       HOME: /home/node
       TERM: xterm-256color
 
-      # Traefik proxy support (Coolify uses Traefik)
-      CLAWDBOT_TRUSTED_PROXIES: "172.16.0.0/12,10.0.0.0/8"
-
       # Gateway authentication (CHANGE THIS - generate a secure random token)
       CLAWDBOT_GATEWAY_TOKEN: ${GATEWAY_TOKEN:?Set GATEWAY_TOKEN in Coolify}
 
@@ -71,15 +68,37 @@ services:
       # Brave Search (for web_search tool)
       # BRAVE_API_KEY: ${BRAVE_API_KEY:-}
 
+    # Run as root to fix volume permissions and create config, then drop to node user
+    user: root
     command:
-      - node
-      - dist/index.js
-      - gateway
-      - --bind
-      - lan
-      - --port
-      - "18789"
-      - --allow-unconfigured
+      - /bin/sh
+      - -c
+      - |
+        # Fix volume permissions
+        mkdir -p /home/node/.moltbot /home/node/clawd
+        chown -R node:node /home/node/.moltbot /home/node/clawd
+
+        # Create config with trusted proxies if it doesn't exist
+        CONFIG_FILE="/home/node/.moltbot/moltbot.json"
+        if [ ! -f "$$CONFIG_FILE" ]; then
+          cat > "$$CONFIG_FILE" << 'CONFIGEOF'
+        {
+          "gateway": {
+            "port": 18789,
+            "bind": "lan",
+            "mode": "local",
+            "trustedProxies": ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"],
+            "auth": {
+              "mode": "token"
+            }
+          }
+        }
+        CONFIGEOF
+          chown node:node "$$CONFIG_FILE"
+        fi
+
+        # Start gateway as node user
+        exec su node -s /bin/sh -c 'node dist/index.js gateway --bind lan --port 18789 --allow-unconfigured'
 
     # Health check for Coolify monitoring
     healthcheck:
