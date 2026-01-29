@@ -74,6 +74,11 @@ services:
       - /bin/sh
       - -c
       - |
+        # Create moltbot command alias
+        echo '#!/bin/sh' > /usr/local/bin/moltbot
+        echo 'exec node /app/dist/index.js "$$@"' >> /usr/local/bin/moltbot
+        chmod +x /usr/local/bin/moltbot
+
         # Fix volume permissions (both new .moltbot and legacy .clawdbot paths)
         mkdir -p /home/node/.moltbot /home/node/.clawdbot /home/node/clawd
         chown -R node:node /home/node/.moltbot /home/node/.clawdbot /home/node/clawd
@@ -148,7 +153,7 @@ volumes:
 # After deployment, you need to configure channels. Two options:
 #
 # Option A: SSH into container via Coolify terminal
-#   node dist/index.js configure
+#   moltbot configure
 #
 # Option B: Pre-create config file
 #   Create moltbot.json and mount it, or copy into the moltbot-config volume
