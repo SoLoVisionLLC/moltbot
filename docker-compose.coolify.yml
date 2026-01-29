@@ -29,6 +29,7 @@ services:
 
     volumes:
       - moltbot-config:/home/node/.moltbot       # Config, sessions, credentials (new path)
+      - moltbot-legacy:/home/node/.clawdbot      # Legacy state dir (devices, cron, credentials)
       - moltbot-workspace:/home/node/clawd       # Agent workspace
 
     environment:
@@ -128,6 +129,9 @@ volumes:
   moltbot-config:
     # Persistent storage for config, sessions, and credentials
     # Coolify will create and manage this volume
+  moltbot-legacy:
+    # Persistent storage for legacy .clawdbot dir (devices, cron, credentials)
+    # This persists device pairings across redeployments
   moltbot-workspace:
     # Persistent storage for agent workspace files
     # Coolify will create and manage this volume
