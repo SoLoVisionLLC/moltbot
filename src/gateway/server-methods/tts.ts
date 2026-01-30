@@ -1,3 +1,4 @@
+import * as fs from "node:fs";
 import { loadConfig } from "../../config/config.js";
 import {
   OPENAI_TTS_MODELS,
@@ -66,6 +67,8 @@ export const ttsHandlers: GatewayRequestHandlers = {
       respond(false, undefined, errorShape(ErrorCodes.UNAVAILABLE, formatForLog(err)));
     }
   },
+
+
   "tts.convert": async ({ params, respond }) => {
     const text = typeof params.text === "string" ? params.text.trim() : "";
     if (!text) {
@@ -81,8 +84,17 @@ export const ttsHandlers: GatewayRequestHandlers = {
       const channel = typeof params.channel === "string" ? params.channel.trim() : undefined;
       const result = await textToSpeech({ text, cfg, channel });
       if (result.success && result.audioPath) {
+        let audioBase64: string | undefined;
+        try {
+            audioBase64 = fs.readFileSync(result.audioPath).toString("base64");
+            // Optionally delete the temp file if we are just serving it back immediately
+            // But we'll leave it for now to avoid breaking other potential flows
+        } catch (e) {
+            // failed to read
+        }
         respond(true, {
           audioPath: result.audioPath,
+          audioBase64, 
           provider: result.provider,
           outputFormat: result.outputFormat,
           voiceCompatible: result.voiceCompatible,
