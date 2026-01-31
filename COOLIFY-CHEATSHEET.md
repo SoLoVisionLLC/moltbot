@@ -1,155 +1,99 @@
-# Moltbot Coolify Command Cheatsheet
+# Solobot Command Cheatsheet
 
-## Quick Reference
+> **Note**: These commands assume you have set up the `solobot` alias in your
+> `~/.bashrc`. If you haven't, run the alias setup command in the **Setup
+> Alias** section first.
 
-All commands are run from your Coolify server SSH session.
+## Setup Alias (Required)
 
-### Container Management
-
-```bash
-# View container logs
-sudo docker logs --tail 100 $(sudo docker ps -q --filter name=moltbot)
-
-# Follow logs in real-time
-sudo docker logs -f $(sudo docker ps -q --filter name=moltbot)
-
-# Restart container (apply config changes)
-sudo docker restart $(sudo docker ps -q --filter name=moltbot)
-
-# Get container shell
-sudo docker exec -it $(sudo docker ps -q --filter name=moltbot) /bin/sh
-```
-
-### Device Pairing (Control UI Access)
+Run this once on your Coolify server to enable the `solobot` command:
 
 ```bash
-# List pending and paired devices
-sudo docker exec $(sudo docker ps -q --filter name=moltbot) node dist/index.js devices list
-
-# Approve a pending device (use requestId from list)
-sudo docker exec $(sudo docker ps -q --filter name=moltbot) node dist/index.js devices approve <requestId>
-
-# Reject a pending device
-sudo docker exec $(sudo docker ps -q --filter name=moltbot) node dist/index.js devices reject <requestId>
-```
-
-### Telegram Pairing
-
-```bash
-# List pending Telegram pairing requests
-sudo docker exec $(sudo docker ps -q --filter name=moltbot) node dist/index.js pairing list telegram
-
-# Approve a Telegram user (use code from bot message)
-sudo docker exec $(sudo docker ps -q --filter name=moltbot) node dist/index.js pairing approve telegram <CODE>
-```
-
-### Configuration
-
-```bash
-# View current config
-sudo docker exec $(sudo docker ps -q --filter name=moltbot) cat /home/node/.moltbot/moltbot.json
-
-# Edit config interactively
-sudo docker exec -it $(sudo docker ps -q --filter name=moltbot) node dist/index.js config edit
-
-# Run doctor to fix config issues
-sudo docker exec $(sudo docker ps -q --filter name=moltbot) node dist/index.js doctor --fix
-```
-
-### Gateway Status
-
-```bash
-# Check gateway status
-sudo docker exec $(sudo docker ps -q --filter name=moltbot) node dist/index.js gateway status
-
-# Check health endpoint
-curl http://localhost:18889/health
-```
-
-### Troubleshooting
-
-```bash
-# Fix permissions if you get EACCES errors
-sudo docker exec $(sudo docker ps -q --filter name=moltbot) chown -R node:node /home/node/.moltbot /home/node/.clawdbot
-
-# Fix Telegram credentials permissions (if pairing keeps failing)
-sudo docker exec $(sudo docker ps -q --filter name=moltbot) chown -R node:node /home/node/.clawdbot/credentials/
-
-# Check what's in the config directory
-sudo docker exec $(sudo docker ps -q --filter name=moltbot) ls -la /home/node/.moltbot/
-
-# Check what's in the legacy directory
-sudo docker exec $(sudo docker ps -q --filter name=moltbot) ls -la /home/node/.clawdbot/
-
-# Check credentials directory permissions
-sudo docker exec $(sudo docker ps -q --filter name=moltbot) ls -la /home/node/.clawdbot/credentials/
-```
-
-## Shell Alias (Optional)
-
-Add this to your server's `~/.bashrc` for shorter commands:
-
-```bash
-echo 'moltbot() { sudo docker exec -it $(sudo docker ps -q --filter name=moltbot) node dist/index.js "$@"; }' >> ~/.bashrc
+echo 'solobot() { sudo docker exec -it $(sudo docker ps -q --filter name=moltbot) node dist/index.js "$@"; }' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-Then you can use:
+_(You can also use `openclaw` or `clawdbot` as aliases if you prefer, they map
+to the same container)_
+
+---
+
+## 1. Essentials (Start Here)
+
+| Command                | Description                                                                                   |
+| :--------------------- | :-------------------------------------------------------------------------------------------- |
+| `solobot status`       | Show current status of the gateway, AI, and connections.                                      |
+| `solobot doctor --fix` | **Auto-fix common issues** (permissions, config, tokens). Run this first if something breaks. |
+| `solobot logs`         | View real-time logs from the gateway.                                                         |
+| `solobot help`         | Show all available commands.                                                                  |
+
+## 2. Artificial Intelligence
+
+Manage the brains behind the bot.
+
+| Command                         | Description                                                                     |
+| :------------------------------ | :------------------------------------------------------------------------------ |
+| `solobot models list`           | List currently configured models.                                               |
+| `solobot models list --all`     | List **all** available models (Anthropic, OpenAI, etc).                         |
+| `solobot models set <model_id>` | Switch the default model (e.g., `solobot models set claude-3-5-sonnet-latest`). |
+| `solobot models set-image <id>` | Switch the image generation model.                                              |
+| `solobot models scan`           | Scan for new free/paid models from OpenRouter.                                  |
+| `solobot agents list`           | List active AI agents.                                                          |
+| `solobot memory status`         | Check the status of the AI's long-term memory (Vector DB).                      |
+
+## 3. Configuration
+
+| Command               | Description                                  |
+| :-------------------- | :------------------------------------------- |
+| `solobot config edit` | Interactively edit the configuration (JSON). |
+| `solobot config view` | View the current configuration.              |
+| `solobot security`    | Manage security tokens and API keys.         |
+| `solobot update`      | Check for and apply CLI updates.             |
+
+## 4. Connectivity & Pairing
+
+Connect your bot to the world (Telegram, WhatsApp, etc).
+
+| Command                                   | Description                                                 |
+| :---------------------------------------- | :---------------------------------------------------------- |
+| `solobot devices list`                    | **Show pending device links** & control UI access requests. |
+| `solobot devices approve <id>`            | Approve a pending device/browser request.                   |
+| `solobot pairing list telegram`           | List pending Telegram pairing codes.                        |
+| `solobot pairing approve telegram <code>` | Approve a Telegram bot pairing request.                     |
+| `solobot gateway status`                  | detailed status of the message gateway.                     |
+| `solobot channels list`                   | List active communication channels.                         |
+| `solobot dashboard`                       | Get the URL for the Web Control UI.                         |
+
+## 5. Advanced & System
+
+| Command                | Description                                            |
+| :--------------------- | :----------------------------------------------------- |
+| `solobot system`       | View system health and heartbeat events.               |
+| `solobot cron list`    | List scheduled background tasks.                       |
+| `solobot plugins list` | Manage installed plugins.                              |
+| `solobot sandbox`      | Manage the code execution sandbox (Docker/Bubblewrap). |
+| `solobot uninstall`    | Clean up and uninstall the service (use with caution). |
+
+## Troubleshooting Examples
+
+**"I can't connect to the Web UI"**
+
 ```bash
-moltbot devices list
-moltbot pairing approve telegram <CODE>
-moltbot config edit
-moltbot doctor --fix
+solobot devices list
+# Find your request ID in the list
+solobot devices approve <request-id>
 ```
 
-## Inside Coolify Terminal
-
-When using Coolify's built-in terminal (which drops you inside the container), use:
+**"The bot isn't replying"**
 
 ```bash
-moltbot devices list
-moltbot pairing approve telegram <CODE>
-moltbot config edit
+solobot logs
+# Check for errors. If it looks stuck:
+sudo docker restart $(sudo docker ps -q --filter name=moltbot)
 ```
 
-Or the full command:
+**"Permissions errors in logs"**
+
 ```bash
-node dist/index.js devices list
-node dist/index.js pairing approve telegram <CODE>
+solobot doctor --fix
 ```
-
-## Common Issues
-
-### "pairing required" errors
-1. Refresh your browser at https://moltbot.sololink.cloud
-2. Run `devices list` to see pending requests
-3. Approve the pending request with `devices approve <requestId>`
-
-### "token_mismatch" errors
-- Clear browser local storage for moltbot.sololink.cloud
-- Or open in incognito window
-
-### Telegram not responding / pairing keeps failing
-1. Send a message to the bot to get a pairing code
-2. Approve with `pairing approve telegram <CODE>`
-3. If it keeps asking for pairing, check credentials permissions:
-   ```bash
-   sudo docker exec $(sudo docker ps -q --filter name=moltbot) ls -la /home/node/.clawdbot/credentials/
-   ```
-4. If any files are owned by `root`, fix permissions:
-   ```bash
-   sudo docker exec $(sudo docker ps -q --filter name=moltbot) chown -R node:node /home/node/.clawdbot/credentials/
-   ```
-
-### Config changes not taking effect
-- Restart the container: `sudo docker restart $(sudo docker ps -q --filter name=moltbot)`
-
-## Environment Variables (set in Coolify UI)
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `GATEWAY_TOKEN` | Yes | Secure random token for gateway auth |
-| `OPENROUTER_API_KEY` | Yes | OpenRouter API key |
-| `TELEGRAM_BOT_TOKEN` | No | Telegram bot token from @BotFather |
-| `ELEVENLABS_API_KEY` | No | ElevenLabs API key for voice |
-| `BRAVE_API_KEY` | No | Brave Search API key |
