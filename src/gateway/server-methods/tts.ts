@@ -166,4 +166,52 @@ export const ttsHandlers: GatewayRequestHandlers = {
       respond(false, undefined, errorShape(ErrorCodes.UNAVAILABLE, formatForLog(err)));
     }
   },
+
+  "tts.elevenlabs.voices": async ({ respond }) => {
+    try {
+      const cfg = loadConfig();
+      const config = resolveTtsConfig(cfg);
+      const apiKey = resolveTtsApiKey(config, "elevenlabs");
+
+      if (!apiKey) {
+        respond(
+          false,
+          undefined,
+          errorShape(ErrorCodes.UNAVAILABLE, "ElevenLabs API key not configured"),
+        );
+        return;
+      }
+
+      const baseUrl = config.elevenlabs.baseUrl || "https://api.elevenlabs.io";
+      const response = await fetch(`${baseUrl}/v1/voices`, {
+        method: "GET",
+        headers: {
+          "xi-api-key": apiKey,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        respond(
+          false,
+          undefined,
+          errorShape(ErrorCodes.UNAVAILABLE, `ElevenLabs API error: ${response.status}`),
+        );
+        return;
+      }
+
+      const data = await response.json();
+      const voices = (data.voices || []).map((voice: any) => ({
+        voice_id: voice.voice_id,
+        name: voice.name,
+        category: voice.category,
+        preview_url: voice.preview_url,
+        labels: voice.labels,
+      }));
+
+      respond(true, { voices });
+    } catch (err) {
+      respond(false, undefined, errorShape(ErrorCodes.UNAVAILABLE, formatForLog(err)));
+    }
+  },
 };
